@@ -6,7 +6,7 @@ readme = "README.md"
 authors = [
     { name = "David Brooks", email = "d.brooks@auckland.ac.nz" }
 ]
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 dependencies = [
     "python-on-whales>=0.81.0",
     "ttkbootstrap>=2.0.0",
