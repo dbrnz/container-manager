@@ -1,8 +1,9 @@
 #===============================================================================
 
 import os
-from pathlib import Path
+from pathlib import Path, WindowsPath
 from importlib.resources import as_file, files
+import sys
 from tempfile import NamedTemporaryFile
 
 #===============================================================================
@@ -90,8 +91,12 @@ class Container:
     def __set_environment(self, settings: Settings):
         with open(self.__env_file, 'w') as fp:
             fp.write(f'SCICRUNCH_API_KEY={os.environ.get('SCICRUNCH_API_KEY', '')}\n')
-            if self.__settings.root_directory is not None:
-                fp.write(f'FLATMAP_SOURCE_ROOT={self.__settings.root_directory}\n')
-            fp.write(f'FLATMAP_SERVER_PORT={self.__settings.port}\n')
+            if (root_dir := settings.root_directory) is not None:
+                if sys.platform == 'win32':
+                    path = WindowsPath(root_dir).absolute()
+                    drive = path.drive.lower()
+                    root_dir = WindowsPath(f'/mnt/{drive}', *path.parts[1:])
+                fp.write(f'FLATMAP_SOURCE_ROOT={root_dir}\n')
+            fp.write(f'FLATMAP_SERVER_PORT={settings.port}\n')
 
 #===============================================================================
