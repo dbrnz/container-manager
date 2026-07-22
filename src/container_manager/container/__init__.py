@@ -9,10 +9,18 @@ from tempfile import NamedTemporaryFile
 
 from python_on_whales import DockerClient
 from python_on_whales.exceptions import DockerException
+import ttkbootstrap as ttk
 
 #===============================================================================
 
 from ..settings import Settings
+
+#===============================================================================
+
+def docker_exception(error):
+    if error.stderr:
+        msg = error.stderr.split('\n')[0]
+        ttk.Messagebox.show_error(msg)
 
 #===============================================================================
 
@@ -54,21 +62,21 @@ class Container:
                     active_count += 1
             self.__active = active_count > 0
         except DockerException as error:
-            print('Status error:', error)
+            docker_exception(error)
 
     def start(self):
         self.__set_environment()
         try:
             self.__container.compose.up(detach=True, quiet=True)
         except DockerException as error:
-            print('Start error:', error)
+            docker_exception(error)
         self.set_state()
 
     def stop(self):
         try:
             self.__container.compose.down(remove_images='all', quiet=True)
         except DockerException as error:
-            print('Stop error:', error)
+            docker_exception(error)
         self.set_state()
 
     def __set_environment(self):
