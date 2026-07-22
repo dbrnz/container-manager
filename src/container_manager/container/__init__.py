@@ -22,6 +22,14 @@ def docker_exception(error):
         msg = error.stderr.split('\n')[0]
         ttk.Messagebox.show_error(msg)
 
+def toast_success(msg: str):
+    ttk.ToastNotification(
+        title='Modular Modelling',
+        message=msg,
+        duration=3000,  # ms
+        bootstyle="success",
+    ).show_toast()
+
 #===============================================================================
 
 class Container:
@@ -68,6 +76,7 @@ class Container:
         self.__set_environment()
         try:
             self.__container.compose.up(detach=True, quiet=True)
+            toast_success('Container started...')
         except DockerException as error:
             docker_exception(error)
         self.set_state()
@@ -75,6 +84,7 @@ class Container:
     def stop(self):
         try:
             self.__container.compose.down(remove_images='all', quiet=True)
+            toast_success('Container stopped...')
         except DockerException as error:
             docker_exception(error)
         self.set_state()
