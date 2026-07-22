@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 @dataclass
 class Settings:
-    root_directory: str
+    root_directory: str|None
     port: int
 
 #===============================================================================
