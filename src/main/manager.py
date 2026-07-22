@@ -1,9 +1,5 @@
 #===============================================================================
 
-from pathlib import Path
-
-#===============================================================================
-
 import ttkbootstrap as ttk
 
 #===============================================================================
@@ -17,7 +13,7 @@ CONTAINER_PORT = 8000
 #===============================================================================
 
 def main():
-    settings = Settings(Path.home(), CONTAINER_PORT)
+    settings = Settings(None, CONTAINER_PORT)
     app = ttk.App(title="Modular Modelling", theme="bootstrap-light", size=(560, 520))
     ModellingStatusWindow(app, settings)
     app.mainloop()
