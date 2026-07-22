@@ -95,7 +95,7 @@ class Container:
             if (root_dir := settings.root_directory) is not None:
                 if sys.platform == 'win32':
                     path = WindowsPath(root_dir).absolute()
-                    drive = path.drive.lower()
+                    drive = path.drive[:-1].lower()
                     root_dir = WindowsPath(f'/mnt/{drive}', *path.parts[1:])
                 fp.write(f'FLATMAP_SOURCE_ROOT={root_dir}\n')
             fp.write(f'FLATMAP_SERVER_PORT={settings.port}\n')
