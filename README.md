@@ -26,7 +26,6 @@ podman machine start
 ```
 
 ```bash
-brew install docker-compose
 brew install docker-credential-helper
 ```
 
@@ -45,11 +44,6 @@ podman machine start
 ```
 
 * Restart terminal to get changed path.
-
-```bash
-python --version  # Check version is 3.13
-python -m pip install podman-compose
-```
 
 * Create `C:\Users\USER\.config\containers\auth.json`
 

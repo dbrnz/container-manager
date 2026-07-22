@@ -8,6 +8,7 @@ authors = [
 ]
 requires-python = ">=3.13"
 dependencies = [
+    "podman-compose>=1.6.0",
     "python-on-whales>=0.81.0",
     "ttkbootstrap>=2.0.0",
 ]

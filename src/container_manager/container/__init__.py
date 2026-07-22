@@ -25,7 +25,6 @@ class Container:
         env_file.close()
         self.__set_environment()
         self.__config_file = None
-        os.environ['PODMAN_COMPOSE_WARNING_LOGS'] = 'false'
         with as_file(compose_yaml) as path:
             # 'path' is a true pathlib.Path object
             self.__config_file = path.absolute()
@@ -47,12 +46,13 @@ class Container:
     def set_state(self):
         self.__active = False
         try:
-            compose_projects = self.__container.compose.ls()
-            print('projects:', compose_projects)
-            for project in compose_projects:
-                if project.config_files[0] == self.__config_file:
-                    self.__active = project.running > 0
-            print('active:', self.__active)
+            running_containers = self.__container.compose.ps()
+            print('containers:', running_containers)
+            active_count = 0
+            for container in running_containers:
+                if container.state.running:
+                    active_count += 1
+            self.__active = active_count > 0
         except DockerException as error:
             print('Status error:', error)
 
