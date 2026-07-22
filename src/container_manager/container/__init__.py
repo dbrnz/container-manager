@@ -1,0 +1,81 @@
+#===============================================================================
+
+import os
+from pathlib import Path
+from importlib.resources import as_file, files
+from tempfile import NamedTemporaryFile
+
+#===============================================================================
+
+from python_on_whales import DockerClient
+from python_on_whales.exceptions import DockerException
+
+#===============================================================================
+
+from ..settings import Settings
+
+#===============================================================================
+
+class Container:
+    def __init__(self, settings: Settings):
+        self.__settings = settings
+        compose_yaml = files().joinpath('./compose.yaml')
+        env_file = NamedTemporaryFile(suffix='.env', delete=False)
+        self.__env_file = Path(env_file.name).absolute()
+        env_file.close()
+        self.__set_environment()
+        self.__config_file = None
+        os.environ['PODMAN_COMPOSE_WARNING_LOGS'] = 'false'
+        with as_file(compose_yaml) as path:
+            # 'path' is a true pathlib.Path object
+            self.__config_file = path.absolute()
+            self.__container = DockerClient(
+                client_call=['podman'],
+                client_type='podman',
+                compose_files=[self.__config_file],
+                compose_env_files=[self.__env_file]
+            )
+        self.set_state()
+
+    @property
+    def active(self):
+        return self.__active
+
+    def exit(self):
+        self.__env_file.unlink(missing_ok=True)
+
+    def set_state(self):
+        self.__active = False
+        try:
+            compose_projects = self.__container.compose.ls()
+            print('projects:', compose_projects)
+            for project in compose_projects:
+                if project.config_files[0] == self.__config_file:
+                    self.__active = project.running > 0
+            print('active:', self.__active)
+        except DockerException as error:
+            print('Status error:', error)
+
+    def start(self):
+        self.__set_environment()
+        try:
+            self.__container.compose.up(detach=True, quiet=True)
+        except DockerException as error:
+            print('Start error:', error)
+        self.set_state()
+
+    def stop(self):
+        try:
+            self.__container.compose.down(remove_images='all', quiet=True)
+        except DockerException as error:
+            print('Stop error:', error)
+        self.set_state()
+
+    def __set_environment(self):
+        with open(self.__env_file, 'w') as fp:
+            fp.write(f'SCICRUNCH_API_KEY={os.environ.get('SCICRUNCH_API_KEY', '')}\n')
+            if self.__settings.root_directory is not None:
+                fp.write(f'FLATMAP_SOURCE_ROOT={self.__settings.root_directory}\n')
+            fp.write(f'FLATMAP_SERVER_PORT={self.__settings.port}\n')
+
+#===============================================================================
