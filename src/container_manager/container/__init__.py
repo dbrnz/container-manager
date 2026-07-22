@@ -33,13 +33,11 @@ def toast_success(msg: str):
 #===============================================================================
 
 class Container:
-    def __init__(self, settings: Settings):
-        self.__settings = settings
+    def __init__(self):
         compose_yaml = files().joinpath('./compose.yaml')
         env_file = NamedTemporaryFile(suffix='.env', delete=False)
         self.__env_file = Path(env_file.name).absolute()
         env_file.close()
-        self.__set_environment()
         self.__config_file = None
         with as_file(compose_yaml) as path:
             # 'path' is a true pathlib.Path object
@@ -72,8 +70,8 @@ class Container:
         except DockerException as error:
             docker_exception(error)
 
-    def start(self):
-        self.__set_environment()
+    def start(self, settings: Settings):
+        self.__set_environment(settings)
         try:
             self.__container.compose.up(detach=True, quiet=True)
             toast_success('Container started...')
@@ -89,7 +87,7 @@ class Container:
             docker_exception(error)
         self.set_state()
 
-    def __set_environment(self):
+    def __set_environment(self, settings: Settings):
         with open(self.__env_file, 'w') as fp:
             fp.write(f'SCICRUNCH_API_KEY={os.environ.get('SCICRUNCH_API_KEY', '')}\n')
             if self.__settings.root_directory is not None:

@@ -107,7 +107,7 @@ class ContainerStatus:
     def __container_event(self, change_state):
         if change_state == 'start':
             # inactivate button
-            self.__container.start()
+            self.__container.start(self.__settings)
             ## do this asynchronously
             ## set state to starting and poll for active
 
@@ -157,7 +157,7 @@ class ModellingStatusWindow(ttk.Frame):
         self.pack(fill=constants.BOTH, expand=constants.YES)
         self.__app = app
         self.__settings = settings
-        self.__container = Container(self.__settings)
+        self.__container = Container()
 
         header = ttk.Frame(self, padding=10)
         header.pack(fill=constants.X)
