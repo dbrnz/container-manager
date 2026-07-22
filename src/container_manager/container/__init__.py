@@ -40,6 +40,7 @@ class Container:
         self.__env_file = Path(env_file.name).absolute()
         env_file.close()
         self.__config_file = None
+        os.environ['PODMAN_COMPOSE_WARNING_LOGS'] = 'false'
         with as_file(compose_yaml) as path:
             # 'path' is a true pathlib.Path object
             self.__config_file = path.absolute()
