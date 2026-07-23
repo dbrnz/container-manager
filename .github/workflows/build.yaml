@@ -3,6 +3,9 @@ name: Build Windows Executable
 on:
   workflow_dispatch:
 
+env:
+  DEPLOYMENT: yes
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -23,10 +26,6 @@ jobs:
         uses: Nuitka/Nuitka-Action@main
         with:
           script-name: src/main/manager.py
-          mode: onefile
-          windows-console-mode: disable
-          enable-plugins: tk-inter
-          include-package-data: ttkbootstrap
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
