@@ -40,12 +40,14 @@ class Container:
         self.__env_file = Path(env_file.name).absolute()
         env_file.close()
         self.__config_file = None
-        if '__compiled__' in globals():
+        self.__compiled = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
+        if self.__compiled:
             if sys.platform == 'win32':
                 podman_compose = 'podman-compose.exe'
             else:
                 podman_compose = 'podman-compose'
-            os.environ['PODMAN_COMPOSE_PROVIDER'] = files('__main__').joinpath(f'./bin/{podman_compose}')
+            with as_file(files().joinpath(f'../../{podman_compose}')) as path:
+                os.environ['PODMAN_COMPOSE_PROVIDER'] = str(path.resolve())
         os.environ['PODMAN_COMPOSE_WARNING_LOGS'] = 'false'
         with as_file(compose_yaml) as path:
             # 'path' is a true pathlib.Path object
