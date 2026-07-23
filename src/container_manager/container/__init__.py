@@ -3,6 +3,7 @@
 import os
 from pathlib import Path, WindowsPath
 from importlib.resources import as_file, files
+import logging
 import sys
 from tempfile import NamedTemporaryFile
 
@@ -19,6 +20,7 @@ from ..settings import Settings
 #===============================================================================
 
 def docker_exception(error):
+    logging.exception(error)
     if error.stderr:
         msg = error.stderr.split('\n')[0]
         ttk.Messagebox.show_error(msg)
@@ -38,6 +40,7 @@ class Container:
         compose_yaml = files().joinpath('./compose.yaml')
         env_file = NamedTemporaryFile(suffix='.env', delete=False)
         self.__env_file = Path(env_file.name).absolute()
+        logging.info(f'Environment settings: {self.__env_file}')
         env_file.close()
         self.__config_file = None
         self.__compiled = getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS')
@@ -48,6 +51,7 @@ class Container:
                 podman_compose = 'podman-compose'
             with as_file(files().joinpath(f'../../{podman_compose}')) as path:
                 os.environ['PODMAN_COMPOSE_PROVIDER'] = str(path.resolve())
+            logging.info(f'Compose provider: {os.environ['PODMAN_COMPOSE_PROVIDER']}')
         os.environ['PODMAN_COMPOSE_WARNING_LOGS'] = 'false'
         with as_file(compose_yaml) as path:
             # 'path' is a true pathlib.Path object
