@@ -29,7 +29,7 @@ def toast_success(msg: str):
     ttk.ToastNotification(
         title='Modular Modelling',
         message=msg,
-        duration=3000,  # ms
+        duration=5000,  # ms
         bootstyle="success",
     ).show_toast()
 
