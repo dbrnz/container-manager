@@ -1,0 +1,15 @@
+- module-name: __main__
+  dlls:
+    - dest_path: './bin'
+    - from_filenames:
+        relative_path: '.venv/Scripts'
+        prefixes:
+          - 'podman-compose'
+        executable: 'yes'
+      when: 'win32'
+    - from_filenames:
+        relative_path: '.venv/bin'
+        prefixes:
+          - 'podman-compose'
+        executable: 'yes'
+      when: 'linux or macos'

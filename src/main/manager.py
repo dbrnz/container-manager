@@ -1,5 +1,6 @@
 #===============================================================================
 # nuitka-project: --enable-plugin=tk-inter
+# nuitka-project: --user-package-configuration-file=nuitka-config.yaml
 # nuitka-project: --include-package=podman_compose
 # nuitka-project: --include-package-data=ttkbootstrap
 # nuitka-project-if: os.getenv("DEPLOYMENT") == "yes":
