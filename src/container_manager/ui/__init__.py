@@ -104,6 +104,7 @@ class ContainerManager:
         self.__settings = settings
         self.__container = Container()
         self.__container_state = CONTAINER_STATE.STARTED if self.__container.active else CONTAINER_STATE.STOPPED
+        self.__progress_gauge = None
         running_state = RUNNING_STATES[self.__container_state]
         status = ttk.Labelframe(parent, text="Status", padding=12)
         status.pack(fill=constants.X, padx=10, pady=10)
@@ -148,11 +149,20 @@ class ContainerManager:
             self.update_run_state(CONTAINER_STATE.STOPPING)
             threading.Thread(target=self.__container.stop).start()
 
+    def __progress_bar(self, msg:str):
+        self.__progress_gauge = ttk.Floodgauge(self.__parent, mode='indeterminate', text=msg, bootstyle='info')
+        self.__progress_gauge.pack(fill=constants.X)
+        self.__progress_gauge.start()
+
     def __set_button_state(self):
         self.__button.state(['!disabled' if self.__container_state in [CONTAINER_STATE.STOPPED, CONTAINER_STATE.STARTED]
                         else 'disabled'])
 
     def update_run_state(self, state: CONTAINER_STATE):
+        if self.__progress_gauge is not None:
+            self.__progress_gauge.stop()
+            self.__progress_gauge.destroy()
+            self.__progress_gauge = None
         running_state = RUNNING_STATES[state]
         ttk.apply_bootstyle(self.__status_icon, running_state.style)
         self.__status_label.configure(text=running_state.description)
@@ -162,6 +172,10 @@ class ContainerManager:
         )
         self.__container_state = state
         self.__set_button_state()
+        if state == CONTAINER_STATE.STARTING:
+            self.__progress_bar('Starting...')
+        elif state == CONTAINER_STATE.STOPPING:
+            self.__progress_bar('Stopping...')
 
 #===============================================================================
 
