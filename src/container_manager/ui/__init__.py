@@ -33,12 +33,14 @@ class RunningState:
     change_state: str
 
 class CONTAINER_STATE(Enum):
+    UNCONFIGURED = -1
     STOPPED  = 0
     STARTING = 1
     STARTED  = 2
     STOPPING = 3
 
 RUNNING_STATES: dict[CONTAINER_STATE, RunningState] = {
+    CONTAINER_STATE.UNCONFIGURED: RunningState('Please configure...', constants.DANGER, 'start'),
     CONTAINER_STATE.STOPPED: RunningState('Container stopped', constants.DANGER, 'start'),
     CONTAINER_STATE.STARTING: RunningState('Container starting...', constants.WARNING, 'start'),
     CONTAINER_STATE.STARTED: RunningState('Container started', constants.SUCCESS, 'stop'),
@@ -104,7 +106,12 @@ class ContainerManager:
         self.__parent = parent
         self.__settings = settings
         self.__container = Container()
-        self.__container_state = CONTAINER_STATE.STARTED if self.__container.active else CONTAINER_STATE.STOPPED
+        if self.__settings.root_directory is None:
+            self.__container_state = CONTAINER_STATE.UNCONFIGURED
+        elif self.__container.active:
+            self.__container_state = CONTAINER_STATE.STARTED
+        else:
+            self.__container_state = CONTAINER_STATE.STOPPED
         self.__progress_gauge = None
         running_state = RUNNING_STATES[self.__container_state]
         status = ttk.Labelframe(parent, text="Status", padding=12)
@@ -228,7 +235,9 @@ class ModellingStatusWindow(ttk.Frame):
         return CONTAINER_STATE.STARTED if self.__manager.active else CONTAINER_STATE.STOPPED
 
     def __idle_loop(self):
-        if (response := self.__manager.check_queue()) is not None:
+        if self.__manager.state == CONTAINER_STATE.UNCONFIGURED and self.__settings.root_directory is not None:
+            self.__manager.update_run_state(self.__container_state)
+        elif (response := self.__manager.check_queue()) is not None:
             if response[0] == 'status':
                 new_state = CONTAINER_STATE.STARTED if response[1] == 'started' else CONTAINER_STATE.STOPPED
             elif response[0] == 'exception':
