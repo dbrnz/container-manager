@@ -3,9 +3,6 @@ name: Build Windows Executable
 on:
   workflow_dispatch:
 
-env:
-  DEPLOYMENT: yes
-
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -23,7 +20,7 @@ jobs:
         run: uv sync
 
       - name: Build Executable with pyinstaller
-        run: uvx pyinstaller manager.spec
+        run: uv run python -m PyInstaller manager.spec
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
