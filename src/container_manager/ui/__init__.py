@@ -57,7 +57,10 @@ def docker_exception(error):
     logging.exception(error)
     print(error)
     if error.stderr:
-        msg = error.stderr.split('\n')[0]
+        error_messages = error.stderr.split('\n')
+        msg = error_messages[0]
+        if msg.startswith('Traceback'):
+            msg = error_messages[-2:].join('\n')
         ttk.Messagebox.show_error(msg)
 
 #===============================================================================
