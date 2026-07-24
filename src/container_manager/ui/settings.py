@@ -18,6 +18,35 @@ EMPTY_DIRECTORY = 'Click to set'
 
 #===============================================================================
 
+@ttk.validator
+def valid_port(event, warning):
+    try:
+        port = int(event.postchangetext)
+        if 1024 <= port <= 65535:
+            ttk.apply_bootstyle(event.widget, constants.PRIMARY)
+            warning.configure(text='')
+            return True
+        else:
+            warning.configure(text='Port must be between 1024 and 65535')
+    except ValueError:
+        warning.configure(text='Port must be numeric')
+    ttk.apply_bootstyle(event.widget, constants.WARNING)
+    return True
+
+class PortEntry:
+    def __init__(self, parent, variable: ttk.StringVar):
+        container = ttk.Frame(parent)
+        container.pack(fill=constants.X, expand=constants.YES, pady=5)
+        lbl = ttk.Label(container, text='Port:', width=10)
+        lbl.pack(side=constants.LEFT, padx=5)
+        self.__field = ttk.Entry(container, textvariable=variable, width=5)
+        self.__field.pack(side=constants.LEFT, padx=5, fill=constants.X, expand=constants.NO)
+        warning_field = ttk.Label(container, text='', bootstyle=constants.DANGER)
+        warning_field.pack(side=constants.LEFT, padx=5, fill=constants.X, expand=constants.YES)
+        ttk.Validation.add(self.__field, valid_port, when='key', warning=warning_field)
+
+#===============================================================================
+
 class SettingsDialog(ttk.Dialog):
     def __init__(self, settings: Settings):
         super().__init__(parent=None, title='Container settings', alert=False)
@@ -28,19 +57,8 @@ class SettingsDialog(ttk.Dialog):
     def create_body(self, parent):
         frame = ttk.Frame(parent, padding=(20, 20))
         self.__root_link = self.__create_entry_button(frame, "root directory", self.__root_directory)
-        port_field = self.__create_entry_field(frame, "port", self.__port)
-        ttk.Validation.numeric(port_field, when='all')
-        ttk.Validation.range(port_field, 1024, 65535)
+        PortEntry(frame, self.__port)
         frame.pack(fill=constants.X, expand=True)
-
-    def __create_entry_field(self, parent, label: str, variable: ttk.StringVar):
-        container = ttk.Frame(parent)
-        container.pack(fill=constants.X, expand=constants.YES, pady=5)
-        lbl = ttk.Label(container, text=f'{label.title()}:', width=10)
-        lbl.pack(side=constants.LEFT, padx=5)
-        field = ttk.Entry(container, textvariable=variable, width=5)
-        field.pack(side=constants.LEFT, padx=5, fill=constants.X, expand=constants.NO)
-        return field
 
     def __create_entry_button(self, parent, label: str, variable: ttk.StringVar):
         container = ttk.Frame(parent)
