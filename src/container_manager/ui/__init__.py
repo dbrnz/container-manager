@@ -96,12 +96,10 @@ class ContainerSettings:
         dialog = SettingsDialog(self.__settings)
         dialog.show()
         if (settings := dialog.result) is not None:
-            ## If settings have changed need [Reload] container popup...
             self.__settings.root_directory = settings['root_directory']
             self.__root_dir_label.configure(text=self.__settings.root_directory)
             self.__settings.port = settings['port']
             self.__port_label.configure(text=self.__settings.port)
-        print(settings, self.__settings)
             self.__settings.save()
 
 #===============================================================================
@@ -204,7 +202,7 @@ class DashboardLink:
         self.activate(active)
 
     def activate(self, active: bool=True):
-        self.__button.state(['!disabled' if active else 'disabled'])                 # greyed out, not clickable
+        self.__button.state(['!disabled' if active else 'disabled'])
 
     def __open_dashboard(self):
         dashboard_url = f'http://localhost:{self.__settings.port}'
@@ -262,7 +260,6 @@ class ModellingStatusWindow(ttk.Frame):
         self.__app.after(POLL_INTERVAL, self.__idle_loop)
 
     def __exit(self):
-        print('exiting...')
         self.__manager.exit()
         self.__app.destroy()
 

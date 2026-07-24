@@ -7,7 +7,6 @@ import ttkbootstrap as ttk
 from container_manager.settings import Settings
 from container_manager.ui import ModellingStatusWindow
 
-CONTAINER_NAME = 'xx'
 CONTAINER_PORT = 8000
 
 #===============================================================================

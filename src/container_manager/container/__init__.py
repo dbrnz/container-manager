@@ -64,7 +64,6 @@ class Container:
         self.__active = False
         try:
             running_containers = self.__container.compose.ps()
-            print('containers:', running_containers)
             active_count = 0
             for container in running_containers:
                 if container.state.running:
