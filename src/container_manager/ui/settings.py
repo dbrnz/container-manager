@@ -56,11 +56,11 @@ class SettingsDialog(ttk.Dialog):
 
     def create_body(self, parent):
         frame = ttk.Frame(parent, padding=(20, 20))
-        self.__root_link = self.__create_entry_button(frame, "root directory", self.__root_directory)
+        self.__root_link = self.__create_entry_link(frame, "root directory", self.__root_directory)
         PortEntry(frame, self.__port)
         frame.pack(fill=constants.X, expand=True)
 
-    def __create_entry_button(self, parent, label: str, variable: ttk.StringVar):
+    def __create_entry_link(self, parent, label: str, variable: ttk.StringVar):
         container = ttk.Frame(parent)
         container.pack(fill=constants.X, expand=constants.YES, pady=5)
         lbl = ttk.Label(container, text=f'{label.title()}:', width=10)
