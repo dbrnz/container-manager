@@ -23,12 +23,10 @@ jobs:
         run: uv sync
 
       - name: Build Executable with Nuitka
-        uses: Nuitka/Nuitka-Action@main
-        with:
-          script-name: src/main/manager.py
+        run: uv run pyinstaller manager.spec
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v7
         with:
           name: windows-executable
-          path: build/manager.exe
+          path: dist/manager.exe
