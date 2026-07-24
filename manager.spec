@@ -1,14 +1,21 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
+import sys
 
 datas = [('src/container_manager/container/compose.yaml', 'container_manager/container')]
-binaries = [('.venv/Scripts/podman-compose.exe', '.')]
+binaries = []
+if sys.platform == 'win32':
+    binaries.append(('.venv/Scripts/podman-compose.exe', '.'))
+else:
+    binaries.append(('.venv/bin/podman-compose', '.'))
 hiddenimports = []
 tmp_ret = collect_all('ttkbootstrap')
-datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+datas += tmp_ret[0]
+binaries += tmp_ret[1]
+hiddenimports += tmp_ret[2]
 
 a = Analysis(
-    ['src\\main\\manager.py'],
+    ['src/main/manager.py'],
     pathex=[],
     binaries=binaries,
     datas=datas,
