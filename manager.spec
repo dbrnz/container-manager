@@ -1,14 +1,13 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
-
-#from pathlib import Path
 import shutil
+import sys
+
+sys.path.append('src')
 
 binaries = [(shutil.which('podman-compose'), '.')]
-
-#binaries = [Path(shutil.which('podman-compose')).as_posix()]
 datas = [('src/container_manager/container/compose.yaml', 'container_manager/container')]
-hiddenimports = []
+hiddenimports = [] # ['container_manager']
 
 tmp_ret = collect_all('ttkbootstrap')
 datas += tmp_ret[0]
