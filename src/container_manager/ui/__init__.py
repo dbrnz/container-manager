@@ -209,8 +209,8 @@ class DashboardLink:
         self.__button.state(['!disabled' if active else 'disabled'])
 
     def __open_dashboard(self):
-        dashboard_url = f'http://localhost:{self.__settings.port}'
         print('Open dashboard:', dashboard_url)
+        dashboard_url = f'http://127.0.0.1:{self.__settings.port}/viewer/'
         webbrowser.open_new_tab(dashboard_url)
 
 #===============================================================================
