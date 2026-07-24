@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
-      - name: Build Executable with Nuitka
+      - name: Build Executable with pyinstaller
         run: uvx pyinstaller manager.spec
 
       - name: Upload Artifact
