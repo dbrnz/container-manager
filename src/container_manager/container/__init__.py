@@ -93,7 +93,7 @@ class Container:
         with open(self.__env_file, 'w') as fp:
             fp.write(f'SCICRUNCH_API_KEY={os.environ.get('SCICRUNCH_API_KEY', '')}\n')
             if (root_dir := settings.root_directory) is not None:
-                if sys.platform == 'win32' and not self.__compiled:
+                if sys.platform == 'win32':
                     path = WindowsPath(root_dir).absolute()
                     drive = path.drive[:-1].lower()
                     root_dir = WindowsPath(f'/mnt/{drive}', *path.parts[1:])
