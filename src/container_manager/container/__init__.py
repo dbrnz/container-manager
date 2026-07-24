@@ -12,21 +12,10 @@ from tempfile import NamedTemporaryFile
 
 from python_on_whales import DockerClient
 from python_on_whales.exceptions import DockerException
-import ttkbootstrap as ttk
 
 #===============================================================================
 
 from ..settings import Settings
-
-#===============================================================================
-
-def toast_success(msg: str):
-    ttk.ToastNotification(
-        title='Modular Modelling',
-        message=msg,
-        duration=5000,  # ms
-        bootstyle="success",
-    ).show_toast()
 
 #===============================================================================
 
@@ -88,7 +77,6 @@ class Container:
         self.__set_environment(settings)
         try:
             self.__container.compose.up(detach=True, quiet=True)
-            toast_success('Container started...')
             self.__response_queue.put(('status', 'started'))
         except DockerException as error:
             self.__response_queue.put(('exception', error))
@@ -97,7 +85,6 @@ class Container:
     def stop(self):
         try:
             self.__container.compose.down(remove_images='all', quiet=True)
-            toast_success('Container stopped...')
             self.__response_queue.put(('status', 'stopped'))
         except DockerException as error:
             self.__response_queue.put(('exception', error))
