@@ -5,7 +5,7 @@ import ttkbootstrap as ttk
 #===============================================================================
 
 from container_manager.settings import Settings
-from container_manager.ui import ModellingStatusWindow
+from container_manager.ui import APPLICATION_TITLE, ModellingStatusWindow
 
 CONTAINER_PORT = 8000
 
@@ -13,7 +13,7 @@ CONTAINER_PORT = 8000
 
 def main():
     settings = Settings(None, CONTAINER_PORT)
-    app = ttk.App(title="Modular Modelling", theme="bootstrap-light", size=(560, 520))
+    app = ttk.App(title=APPLICATION_TITLE, theme='bootstrap-light', size=(560, 520))
     ModellingStatusWindow(app, settings)
     app.mainloop()
 

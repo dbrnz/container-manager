@@ -22,6 +22,10 @@ from .styles import initialise_styles
 
 #===============================================================================
 
+APPLICATION_TITLE = 'Modular Modelling'
+
+#===============================================================================
+
 POLL_INTERVAL = 100         # ms
 
 #===============================================================================
@@ -222,7 +226,7 @@ class ModellingStatusWindow(ttk.Frame):
 
         header = ttk.Frame(self, padding=10)
         header.pack(fill=constants.X)
-        ttk.Label(header, text="Modular Modelling", font="-size 18 -weight bold").pack()
+        ttk.Label(header, text=APPLICATION_TITLE, font='-size 18 -weight bold').pack()
 
         self.__manager = ContainerManager(self, self.__settings)
         self.__container_settings = ContainerSettings(self, self.__settings, self.__settings_enabled)
