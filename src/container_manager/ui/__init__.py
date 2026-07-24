@@ -59,7 +59,7 @@ def docker_exception(error):
 #===============================================================================
 
 class ContainerSettings:
-    def __init__(self, parent, settings: Settings):
+    def __init__(self, parent, settings: Settings, enabled: bool=False):
         self.__settings = settings
         config = ttk.Labelframe(parent, text="Settings", padding=12)
         config.pack(fill=constants.X, padx=10, pady=10)
@@ -80,12 +80,17 @@ class ContainerSettings:
             config,
             text=str(settings.port)
         ).grid(row=1, column=1, sticky=constants.EW, padx=4, pady=4)
-        ttk.Button(
+        self.__button = ttk.Button(
             config,
             text='Configure',
             command=self.__change_settings
-        ).grid(row=2, column=2, sticky=constants.W, pady=4)
+        )
+        self.__button.grid(row=2, column=2, sticky=constants.W, pady=4)
         config.columnconfigure(1, weight=1)
+        self.enable(enabled)
+
+    def enable(self, enabled: bool=True):
+        self.__button.state(['!disabled' if enabled else 'disabled'])
 
     def __change_settings(self):
         dialog = SettingsDialog(self.__settings)
@@ -221,9 +226,9 @@ class ModellingStatusWindow(ttk.Frame):
         header.pack(fill=constants.X)
         ttk.Label(header, text="Modular Modelling", font="-size 18 -weight bold").pack()
 
-        self.__container_settings = ContainerSettings(self, self.__settings)
-        self.__dashboard_link = DashboardLink(self, self.__settings)
         self.__manager = ContainerManager(self, self.__settings)
+        self.__container_settings = ContainerSettings(self, self.__settings, self.__settings_enabled)
+        self.__dashboard_link = DashboardLink(self, self.__settings, self.__link_activated)
 
         footer = ttk.Frame(self, padding=10)
         footer.pack(fill=constants.X)
@@ -233,6 +238,14 @@ class ModellingStatusWindow(ttk.Frame):
     @property
     def __container_state(self):
         return CONTAINER_STATE.STARTED if self.__manager.active else CONTAINER_STATE.STOPPED
+
+    @property
+    def __link_activated(self):
+        return self.__manager.state == CONTAINER_STATE.STARTED
+
+    @property
+    def __settings_enabled(self):
+        return self.__manager.state in [CONTAINER_STATE.UNCONFIGURED, CONTAINER_STATE.STOPPED]
 
     def __idle_loop(self):
         if self.__manager.state == CONTAINER_STATE.UNCONFIGURED and self.__settings.root_directory is not None:
@@ -244,6 +257,8 @@ class ModellingStatusWindow(ttk.Frame):
                 docker_exception(response[1])
                 new_state = self.__container_state
             self.__manager.update_run_state(new_state)
+            self.__container_settings.enable(self.__settings_enabled)
+            self.__dashboard_link.activate(self.__link_activated)
         self.__app.after(POLL_INTERVAL, self.__idle_loop)
 
     def __exit(self):
