@@ -95,6 +95,7 @@ class ContainerSettings:
             self.__settings.port = settings['port']
             self.__port_label.configure(text=self.__settings.port)
         print(settings, self.__settings)
+            self.__settings.save()
 
 #===============================================================================
 
