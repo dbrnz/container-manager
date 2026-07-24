@@ -75,7 +75,7 @@ class Container:
     def start(self, settings: Settings):
         self.__set_environment(settings)
         try:
-            self.__container.compose.up(detach=True, quiet=True)
+            self.__container.compose.up(recreate=False, detach=True, quiet=True)
             self.__response_queue.put(('status', 'started'))
         except DockerException as error:
             self.__response_queue.put(('exception', error))
@@ -83,7 +83,7 @@ class Container:
 
     def stop(self):
         try:
-            self.__container.compose.down(remove_images='all', quiet=True)
+            self.__container.compose.down(remove_orphans=True, quiet=True)
             self.__response_queue.put(('status', 'stopped'))
         except DockerException as error:
             self.__response_queue.put(('exception', error))
