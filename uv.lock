@@ -30,7 +30,7 @@ dependencies = [
     { name = "ttkbootstrap" },
 ]
 
-[package.dev-dependencies]
+[package.optional-dependencies]
 dev = [
     { name = "pyinstaller" },
 ]
@@ -38,12 +38,11 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "podman-compose", specifier = ">=1.6.0" },
+    { name = "pyinstaller", marker = "extra == 'dev'", specifier = ">=6.21.0" },
     { name = "python-on-whales", specifier = ">=0.81.0" },
     { name = "ttkbootstrap", specifier = ">=2.0.0" },
 ]
-
-[package.metadata.requires-dev]
-dev = [{ name = "pyinstaller", specifier = ">=6.21.0" }]
+provides-extras = ["dev"]
 
 [[package]]
 name = "macholib"
