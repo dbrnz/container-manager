@@ -4,6 +4,7 @@ import os
 from pathlib import Path, WindowsPath
 from importlib.resources import as_file, files
 import logging
+import queue
 import sys
 from tempfile import NamedTemporaryFile
 
@@ -19,12 +20,6 @@ from ..settings import Settings
 
 #===============================================================================
 
-def docker_exception(error):
-    logging.exception(error)
-    if error.stderr:
-        msg = error.stderr.split('\n')[0]
-        ttk.Messagebox.show_error(msg)
-
 def toast_success(msg: str):
     ttk.ToastNotification(
         title='Modular Modelling',
@@ -39,6 +34,7 @@ class Container:
     def __init__(self):
         compose_yaml = files().joinpath('./compose.yaml')
         env_file = NamedTemporaryFile(suffix='.env', delete=False)
+        self.__response_queue = queue.Queue()
         self.__env_file = Path(env_file.name).absolute()
         logging.info(f'Environment settings: {self.__env_file}')
         env_file.close()
@@ -68,6 +64,10 @@ class Container:
     def active(self):
         return self.__active
 
+    @property
+    def response_queue(self):
+        return self.__response_queue
+
     def exit(self):
         self.__env_file.unlink(missing_ok=True)
 
@@ -82,23 +82,25 @@ class Container:
                     active_count += 1
             self.__active = active_count > 0
         except DockerException as error:
-            docker_exception(error)
+            self.__response_queue.put(('exception', error))
 
     def start(self, settings: Settings):
         self.__set_environment(settings)
         try:
             self.__container.compose.up(detach=True, quiet=True)
             toast_success('Container started...')
+            self.__response_queue.put(('status', 'started'))
         except DockerException as error:
-            docker_exception(error)
+            self.__response_queue.put(('exception', error))
         self.set_state()
 
     def stop(self):
         try:
             self.__container.compose.down(remove_images='all', quiet=True)
             toast_success('Container stopped...')
+            self.__response_queue.put(('status', 'stopped'))
         except DockerException as error:
-            docker_exception(error)
+            self.__response_queue.put(('exception', error))
         self.set_state()
 
     def __set_environment(self, settings: Settings):

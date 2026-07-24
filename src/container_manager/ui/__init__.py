@@ -2,6 +2,9 @@
 
 from dataclasses import dataclass
 from enum import Enum
+import logging
+import queue
+import threading
 import webbrowser
 
 #===============================================================================
@@ -19,23 +22,37 @@ from .styles import initialise_styles
 
 #===============================================================================
 
+POLL_INTERVAL = 100         # ms
+
+#===============================================================================
+
 @dataclass
 class RunningState:
     description: str
     style: str
     change_state: str
 
-class RUNNING_STATE(Enum):
-    STOPPED = 0
-    RUNNING = 1
+class CONTAINER_STATE(Enum):
+    STOPPED  = 0
+    STARTING = 1
+    STARTED  = 2
+    STOPPING = 3
 
-
-
-
-RUNNING_STATES: dict[RUNNING_STATE, RunningState] = {
-    RUNNING_STATE.STOPPED: RunningState('Container stopped', constants.DANGER, 'start'),
-    RUNNING_STATE.RUNNING: RunningState('Container running', constants.SUCCESS, 'stop')
+RUNNING_STATES: dict[CONTAINER_STATE, RunningState] = {
+    CONTAINER_STATE.STOPPED: RunningState('Container stopped', constants.DANGER, 'start'),
+    CONTAINER_STATE.STARTING: RunningState('Container starting...', constants.WARNING, 'start'),
+    CONTAINER_STATE.STARTED: RunningState('Container started', constants.SUCCESS, 'stop'),
+    CONTAINER_STATE.STOPPING: RunningState('Container stopping...', constants.WARNING, 'stop')
 }
+
+#===============================================================================
+
+def docker_exception(error):
+    logging.exception(error)
+    print(error)
+    if error.stderr:
+        msg = error.stderr.split('\n')[0]
+        ttk.Messagebox.show_error(msg)
 
 #===============================================================================
 
@@ -81,12 +98,13 @@ class ContainerSettings:
 
 #===============================================================================
 
-class ContainerStatus:
-    def __init__(self, parent, settings: Settings, container):
+class ContainerManager:
+    def __init__(self, parent, settings: Settings):
+        self.__parent = parent
         self.__settings = settings
-        self.__container = container
-        state = RUNNING_STATE.RUNNING if self.__container.active else RUNNING_STATE.STOPPED
-        running_state = RUNNING_STATES[state]
+        self.__container = Container()
+        self.__container_state = CONTAINER_STATE.STARTED if self.__container.active else CONTAINER_STATE.STOPPED
+        running_state = RUNNING_STATES[self.__container_state]
         status = ttk.Labelframe(parent, text="Status", padding=12)
         status.pack(fill=constants.X, padx=10, pady=10)
         self.__status_icon = ttk.Label(
@@ -98,34 +116,52 @@ class ContainerStatus:
             status,
             text=running_state.description
         ).grid(row=0, column=1, sticky=constants.EW, padx=4, pady=4)
-        self.__status_change_button = ttk.Button(
+        self.__button = ttk.Button(
             status, text=running_state.change_state.title(),
             command=lambda: self.__container_event(running_state.change_state)
         ).grid(row=0, column=2, sticky=constants.W, pady=4)
         status.columnconfigure(1, weight=1)
+        self.__set_button_state()
+
+    @property
+    def active(self):
+        return self.__container.active
+
+    @property
+    def state(self):
+        return self.__container_state
+
+    def check_queue(self):
+        try:
+            return self.__container.response_queue.get(block=False)
+        except queue.Empty:
+            pass
+
+    def exit(self):
+        self.__container.exit()
 
     def __container_event(self, change_state):
         if change_state == 'start':
-            # inactivate button
-            self.__container.start(self.__settings)
-            ## do this asynchronously
-            ## set state to starting and poll for active
-
+            self.update_run_state(CONTAINER_STATE.STARTING)
+            threading.Thread(target=self.__container.start, args=(self.__settings, )).start()
         elif change_state == 'stop':
-            self.__container.stop()
-            ## do this asynchronously
-            ## set state to stopping and poll for not active
-        self.__set_run_state()
+            self.update_run_state(CONTAINER_STATE.STOPPING)
+            threading.Thread(target=self.__container.stop).start()
 
-    def __set_run_state(self):
-        state = RUNNING_STATE.RUNNING if self.__container.active else RUNNING_STATE.STOPPED
+    def __set_button_state(self):
+        self.__button.state(['!disabled' if self.__container_state in [CONTAINER_STATE.STOPPED, CONTAINER_STATE.STARTED]
+                        else 'disabled'])
+
+    def update_run_state(self, state: CONTAINER_STATE):
         running_state = RUNNING_STATES[state]
         ttk.apply_bootstyle(self.__status_icon, running_state.style)
         self.__status_label.configure(text=running_state.description)
-        self.__status_change_button.configure(
+        self.__button.configure(
             text=running_state.change_state.title(),
             command=lambda: self.__container_event(running_state.change_state)
         )
+        self.__container_state = state
+        self.__set_button_state()
 
 #===============================================================================
 
@@ -163,17 +199,32 @@ class ModellingStatusWindow(ttk.Frame):
         header.pack(fill=constants.X)
         ttk.Label(header, text="Modular Modelling", font="-size 18 -weight bold").pack()
 
-        self.__container_status = ContainerStatus(self, self.__settings, self.__container)
         self.__container_settings = ContainerSettings(self, self.__settings)
         self.__dashboard_link = DashboardLink(self, self.__settings)
+        self.__manager = ContainerManager(self, self.__settings)
 
         footer = ttk.Frame(self, padding=10)
         footer.pack(fill=constants.X)
         ttk.Button(footer, text='OK', bootstyle='success', command=self.__exit).pack()
+        self.__idle_loop()
+
+    @property
+    def __container_state(self):
+        return CONTAINER_STATE.STARTED if self.__manager.active else CONTAINER_STATE.STOPPED
+
+    def __idle_loop(self):
+        if (response := self.__manager.check_queue()) is not None:
+            if response[0] == 'status':
+                new_state = CONTAINER_STATE.STARTED if response[1] == 'started' else CONTAINER_STATE.STOPPED
+            elif response[0] == 'exception':
+                docker_exception(response[1])
+                new_state = self.__container_state
+            self.__manager.update_run_state(new_state)
+        self.__app.after(POLL_INTERVAL, self.__idle_loop)
 
     def __exit(self):
         print('exiting...')
-        self.__container.exit()
+        self.__manager.exit()
         self.__app.destroy()
 
 #===============================================================================
